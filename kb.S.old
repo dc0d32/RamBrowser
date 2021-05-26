@@ -1,0 +1,58 @@
+#include <asm.h>
+
+#if 0	/* we have C versions instead */
+waitKey_raw:
+waitKey_raw.l0:
+	inb	$0x64, %al
+	andb	$1, %al
+	jz	waitKey_raw.l0
+	inb	$0x60, %al
+	ret
+
+#if 0	/* ignores scancodes >= 0x80 */
+.globl	waitKey
+waitKey:
+waitKey.l0:
+	xorl	%eax, %eax
+waitKey.l1:
+	call	waitKey_raw
+	cmpb	$0x80, %al	/* break code? */
+	jb	waitKey.l2	/* no */
+	movb	$1, %ah		/* set break flag */
+	jmp	waitKey.l1
+waitKey.l2:
+	cmpb	$1, %ah
+	je	waitKey.l0	/* ignore key release */
+	andl	$0xFFFFFF00, %eax
+	ret			/* else return raw scancode in %al */
+#else
+.globl	waitKey	
+waitKey:
+	xorl	%eax, %eax
+	call	waitKey_raw
+	ret			
+#endif
+
+.globl	kb_flush
+kb_flush:
+kb_flush.l0:
+	inb	$0x64, %al
+	bt	$0, %eax
+	jnc	kb_flush.l1
+	shll	$8, %eax
+	inb	$0x60, %al
+	shrl	$8, %eax
+kb_flush.l1:
+	bt	$1, %eax
+	jc	kb_flush.l0
+	ret
+
+.globl _kb_reboot
+_kb_reboot:
+	call	kb_flush
+	movb	$0xfe, %al
+	outb	%al, $0x64
+	/* we ideally should have rebooted the machine here. If not, just return to caller :-/. Lame. */
+	ret
+
+#endif

@@ -1,0 +1,63 @@
+RAM Browser : Cold boot attack proof of concept implementation.
+
+Requirements : gcc, as, PC with x86 processor, a bootable partition with any multiboot compliant bootloader installed (grub preferred)
+
+Compiling
+=========
+
+Just make the necessary modifications to Makefile and run
+
+$ make
+
+That should create a file named `rambo' in current directory.
+
+Running
+=======
+
+Copy file `rambo' to any partition that is readable by the multiboot compliant bootloader.
+There are a couple of ways you can test if the theory actually works:
+
+If you want a genuine demonstration
+-----------------------------------
+
+1. Run an application (like a mail client or a browser) and enter any secret data (passwords etc.) and use it a bit.
+2. If you have disc encryption set up, have a file from that encrypted volume/drive open in some app (maybe some editor).
+3. Sync all filesystem buffers to disc, by whatever means natural to your system. On Linux you can use `sync'.
+4. Now turn off the main switch or hold the power button on your laptop, and quickly turn it back on. If your system has a reset switch, you could try that as well. This is a critical step. On laptops, you could pull out the battery and put it back in quickly to be sure there was absolutely no power going in. Similarly for UPS powered machines, you might want to pull out the plug instead. Keep in mind that most memory chips start fading after a second at room temps.
+5. Boot the system and from the multiboot loader, load up `rambo' as kernel with parameter 'b'.
+For example, this can be done with grub as
+
+grub> kernel (path to)/rambo b
+grub> boot
+
+Follow the on screen instructions and you should be able to browse the RAM as it was before you hit the switch. You can try searching for your user/login names, passwords, disc encryption keys (I have not implemented the hex search functionality. But in case you are interested, it should not be that hard to implement:), or any other sensitive information you want kept secret and were using when you hit the switch.
+
+
+For the weak hearted
+--------------------
+1. Do steps 1 and 2 from the list above.
+2. Reboot the computer.
+3. Do step 5 above.
+
+Optionally the weak hearted could do this
+-----------------------------------------
+1. Reboot the machine and load up rambo from any multiboot compliant loader with command line parameter to load an extra file at a given address, passed as command line
+	For example, you can do the following with grub
+
+grub> kernel (path to)/rambo r 200000
+grub> module (path to some text file)/secret
+grub> boot
+
+In this case, grub loads the file `secret' to some location, which rambo copies to 0x00200000 physical address, waits for a keypress and then cold reboots.
+2. Again, with the loader (grub in this example)
+
+grub> kernel (path to)/rambo b
+grub> boot
+
+and follow the instructions. You can now go to 0x00200000 and check if the contents you copied to that physical address actually survived the reboot.
+
+Arbit info
+==========
+It may or may not work with an emulator. It depends on whether the emulator clears memory on every (re)boot. I've had success with Bochs.
+This demo does no disc IO whatsoever, and should be safe to load from your hard drive.
+I am not responsible for any hardware damage caused by wrong memory map provided by your BIOS, which is extremely rare nonetheless :D.

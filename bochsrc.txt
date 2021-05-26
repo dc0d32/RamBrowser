@@ -1,0 +1,22 @@
+#romimage: file=BIOS, address=0xf0000
+#vgaromimage: file=VGABIOS
+floppya: 1_44="floppy.img", status=inserted
+
+
+megs: 128
+boot: a
+log: bochs.log
+panic: action=ask
+error: action=report
+info: action=report
+debug: action=ignore
+
+#gdbstub: enabled=1, port=5022, text_base=0, data_base=0, bss_base=0
+#display_library: x, options="gui_debug"     # use GTK debugger gui frontend
+
+#ips: 500000
+
+#ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
+#ata0-master: type=disk, path="/hd0.img", mode=flat, cylinders=20, heads=16, spt=63
+#ata1: enabled=1, ioaddr1=0x170, ioaddr2=0x370, irq=15
+#ata1-slave: type=disk, path="/dev/hda", mode=flat
